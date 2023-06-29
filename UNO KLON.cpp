@@ -7,6 +7,7 @@
 #include <conio.h>
 #include <string>
 
+#pragma region Card_Defines
 #define Card_0 0
 #define Card_1 1
 #define Card_2 2
@@ -26,7 +27,9 @@
 #define Color_Blue 1
 #define Color_Green 2
 #define Color_Red 3
+#pragma endregion
 
+#pragma #region Structs
 struct Card {
     int type;
     int color;
@@ -41,7 +44,9 @@ struct Hand {
     std::string name;
     std::list<Card> cards;
 };
+#pragma #endregion
 
+#pragma #region DeckMethods
 void ShuffleDeck(Deck& deck) {
     auto rng = std::default_random_engine{};
     rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
@@ -81,6 +86,89 @@ void StapleToDeck(Deck& deck, Deck& staple) {
     }
 }
 
+#pragma #endregion
+
+#pragma region PrintMethods
+std::string CardToText(Card card) {
+    int t = card.type;
+    int c = card.color;
+    std::string r = "";
+    switch (c) {
+    case Color_Blue:
+        r.append("Blue ");
+        break;
+    case Color_Green:
+        r.append("Green ");
+        break;
+    case Color_Red:
+        r.append("Red ");
+        break;
+    case Color_Yellow:
+        r.append("Yellow ");
+        break;
+    }
+
+    int s = 8 - r.size();
+    while (s > 0) {
+        s--;
+        r.append(" ");
+    }
+
+    if (t < 10) {
+        r += std::to_string(t);
+    }
+    else switch (t) {
+    case Card_PlusTwo:
+        r.append("+2");
+        break;
+    case Card_Reverse:
+        r.append("Rev");
+        break;
+    case Card_PlusFour:
+        r.append("+4");
+        break;
+    case Card_Uno:
+        r.append("Uno");
+        break;
+    case Card_Skip:
+        r.append("Skip");
+        break;
+    }
+
+    s = 17 - r.size();
+    while (s > 0) {
+        s--;
+        r.append(" ");
+    }
+
+    return "|" + r + "|";
+}
+
+void PrintHand(Hand hand) {
+    std::cout << "#-----------------#\n|" << hand.name << ":\n";
+    for (Card c : hand.cards) {
+        std::cout << CardToText(c) << "\n";
+    }
+    std::cout << "#-----------------#\n";
+}
+
+void PrintStaple(Deck d) {
+    std::cout << "#-----------------#\n|" << "Staple:" << "\n";
+    std::cout << CardToText(d.cards.front()) << "\n";
+    std::cout << "#-----------------#\n";
+}
+
+void PrintStapleFull(Deck d) {
+    std::cout << "#-----------------#\n|" << "Staple:" << "\n";
+    for (Card c : d.cards) {
+        std::cout << CardToText(c) << "\n";
+    }
+    std::cout << "#-----------------#\n";
+}
+
+#pragma #endregion
+
+#pragma #region CardMethods
 bool CardAllowed(Card c, Deck staple) {
     
     if (staple.cards.size() == 0) {
@@ -121,83 +209,6 @@ int PutDownCard(Hand& player, Deck& staple, int index) {
     return 0;
 }
 
-std::string CardToText(Card card) {
-    int t = card.type;
-    int c = card.color;
-    std::string r = "";
-    switch (c) {
-    case Color_Blue:
-        r.append("Blue ");
-        break;
-    case Color_Green:
-        r.append("Green ");
-        break;
-    case Color_Red:
-        r.append("Red ");
-        break;
-    case Color_Yellow:
-        r.append("Yellow ");
-        break;
-    }
-
-    int s = 8 - r.size();
-    while (s > 0) {
-        s--;
-        r.append(" ");
-    }
-    
-    if (t < 10) {
-        r += std::to_string(t);
-    }
-    else switch (t) {
-        case Card_PlusTwo:
-            r.append("+2");
-            break;
-        case Card_Reverse:
-            r.append("Rev");
-            break;
-        case Card_PlusFour:
-            r.append("+4");
-            break;
-        case Card_Uno:
-            r.append("Uno");
-            break;
-        case Card_Skip:
-            r.append("Skip");
-            break;
-    }
-
-    s = 17 - r.size();
-    while (s > 0) {
-        s--;
-        r.append(" ");
-    }
-
-    return "|"+ r + "|";
-}
-
-void PrintHand(Hand hand) {
-    std::cout << "#-----------------#\n|" << hand.name << ":\n";
-    for (Card c : hand.cards) {
-        std::cout << CardToText(c) << "\n";
-    }
-    std::cout << "#-----------------#\n";
-}
-
-void PrintStaple(Deck d) {
-    std::cout << "#-----------------#\n|" << "Staple:" << "\n";
-    std::cout << CardToText(d.cards.front()) << "\n";
-    std::cout << "#-----------------#\n";
-}
-
-void PrintStapleFull(Deck d) {
-    std::cout << "#-----------------#\n|" << "Staple:" << "\n";
-    for (Card c : d.cards) {
-        std::cout << CardToText(c) << "\n";
-    }
-    std::cout << "#-----------------#\n";
-}
-
 int DrawCard(Hand& player, Deck& deck) {
     Card c = TopOfDeck(deck);
     if (c.type >= -1) {
@@ -207,6 +218,9 @@ int DrawCard(Hand& player, Deck& deck) {
     return 0;
 }
 
+#pragma #endregion
+
+#pragma #region Logic
 void PlayTurn(Hand& player, Deck& deck, Deck& staple, int& plusCards) {
     std::string action;
     int param[2];
@@ -270,6 +284,7 @@ void PlayTurn(Hand& player, Deck& deck, Deck& staple, int& plusCards) {
 int CheckForWinners(Hand p) {
     return p.cards.size() == 0 ? 1 : 0;
 }
+#pragma #endregion
 
 int main()
 {
@@ -325,8 +340,4 @@ int main()
         if (isOver > 0) break;
         i += reverse ? -1 : 1;
     }
-
-    
-
 }
-
