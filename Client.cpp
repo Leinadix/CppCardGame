@@ -1,0 +1,40 @@
+#include <iostream>
+#include <boost/asio.hpp>
+
+using boost::asio::ip::tcp;
+
+int RunClient() {
+    try {
+        boost::asio::io_service io_service;
+
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query("localhost", "12345");
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+
+        std::string message = "Hello, server!";
+        boost::asio::write(socket, boost::asio::buffer(message));
+
+        std::array<char, 1024> buffer;
+        boost::system::error_code error;
+        size_t bytes_received = socket.read_some(boost::asio::buffer(buffer), error);
+        if (error == boost::asio::error::eof) {
+            std::cout << "Server closed the connection" << std::endl;
+        }
+        else if (error) {
+            throw boost::system::system_error(error);
+        }
+        else {
+            std::cout << "Received: " << std::string(buffer.data(), bytes_received) << std::endl;
+        }
+
+        socket.close();
+    }
+    catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+
+    return 0;
+}

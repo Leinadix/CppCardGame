@@ -6,6 +6,8 @@
 #include <chrono>
 #include <conio.h>
 #include <string>
+#include "Server.h"
+#include "Client.h"
 
 #pragma region Card_Defines
 #define Card_0 0
@@ -29,7 +31,7 @@
 #define Color_Red 3
 #pragma endregion
 
-#pragma #region Structs
+#pragma region Structs
 struct Card {
     int type;
     int color;
@@ -44,12 +46,12 @@ struct Hand {
     std::string name;
     std::list<Card> cards;
 };
-#pragma #endregion
+#pragma endregion
 
-#pragma #region DeckMethods
+#pragma region DeckMethods
 void ShuffleDeck(Deck& deck) {
     auto rng = std::default_random_engine{};
-    rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    rng.seed(unsigned int(std::chrono::system_clock::now().time_since_epoch().count()));
     std::shuffle(std::begin(deck.cards), std::end(deck.cards), rng);
 }
 
@@ -86,7 +88,7 @@ void StapleToDeck(Deck& deck, Deck& staple) {
     }
 }
 
-#pragma #endregion
+#pragma endregion
 
 #pragma region PrintMethods
 std::string CardToText(Card card) {
@@ -108,7 +110,7 @@ std::string CardToText(Card card) {
         break;
     }
 
-    int s = 8 - r.size();
+    int s = 8 - int(r.size());
     while (s > 0) {
         s--;
         r.append(" ");
@@ -135,7 +137,7 @@ std::string CardToText(Card card) {
         break;
     }
 
-    s = 17 - r.size();
+    s = 17 - int(r.size());
     while (s > 0) {
         s--;
         r.append(" ");
@@ -166,9 +168,9 @@ void PrintStapleFull(Deck d) {
     std::cout << "#-----------------#\n";
 }
 
-#pragma #endregion
+#pragma endregion
 
-#pragma #region CardMethods
+#pragma region CardMethods
 bool CardAllowed(Card c, Deck staple) {
     
     if (staple.cards.size() == 0) {
@@ -192,21 +194,21 @@ int PutDownCard(Hand& player, Deck& staple, int index) {
     std::vector<Card> hand_vec;
     std::copy(player.cards.begin(), player.cards.end(), std::back_inserter(hand_vec));
 
-    if (CardAllowed(hand_vec[index], staple)) {
-        staple.cards.push_front(hand_vec[index]);
+if (CardAllowed(hand_vec[index], staple)) {
+    staple.cards.push_front(hand_vec[index]);
 
-        player.cards.clear();
+    player.cards.clear();
 
-        for (int i = 0; i < index; i++) {
-            player.cards.push_front(hand_vec[i]);
-        }
-        for (int i = index + 1; i < hand_vec.size(); i++) {
-            player.cards.push_front(hand_vec[i]);
-        }
-        return 1;
+    for (int i = 0; i < index; i++) {
+        player.cards.push_front(hand_vec[i]);
     }
-    std::cout << "Not allowed!\n";
-    return 0;
+    for (int i = index + 1; i < hand_vec.size(); i++) {
+        player.cards.push_front(hand_vec[i]);
+    }
+    return 1;
+}
+std::cout << "Not allowed!\n";
+return 0;
 }
 
 int DrawCard(Hand& player, Deck& deck) {
@@ -218,9 +220,9 @@ int DrawCard(Hand& player, Deck& deck) {
     return 0;
 }
 
-#pragma #endregion
+#pragma endregion
 
-#pragma #region Logic
+#pragma region Logic
 void PlayTurn(Hand& player, Deck& deck, Deck& staple, int& plusCards) {
     std::string action;
     int param[2];
@@ -274,7 +276,7 @@ void PlayTurn(Hand& player, Deck& deck, Deck& staple, int& plusCards) {
                 std::cout << "Cannot put card somwhoe!\n";
             }
         }
-        else{
+        else {
             std::cout << "Nonono!";
             success = 1;
         }
@@ -284,10 +286,9 @@ void PlayTurn(Hand& player, Deck& deck, Deck& staple, int& plusCards) {
 int CheckForWinners(Hand p) {
     return p.cards.size() == 0 ? 1 : 0;
 }
-#pragma #endregion
+#pragma endregion
 
-int main()
-{
+void LocalGame() {
     Deck deck = InitDeck();
     Deck staple;
 
@@ -306,7 +307,7 @@ int main()
     }
 
     for (int i = 0; i < 6; i++) {
-        for(Hand& player : players)
+        for (Hand& player : players)
             DrawCard(player, deck);
     }
 
@@ -340,4 +341,42 @@ int main()
         if (isOver > 0) break;
         i += reverse ? -1 : 1;
     }
+}
+
+bool runArg(std::string arg) {
+    if (arg == "--server" || arg == "-s")
+    {
+        std::cout << "Starting server!\n";
+        RunServer();
+    }
+    else if (arg == "--client" || arg == "-c")
+    {
+        std::cout << "Starting client!\n";
+        RunClient();
+    }
+    else if (arg == "--local" || arg == "-l") {
+        LocalGame();
+    }
+    else if (arg == "--help" || arg == "-h" || arg == "-?") {
+        std::cout << "USAGE:\n\tcppcg.exe [OPTION]\n\nVALID OPTIONS:\n\t-h or --help\n\t-c or --client\n\t-s or --server\n\t-l or --local\n";
+    }
+    else {
+        std::cout << "UNKNOWN COMMAND\n";
+    }
+    return false;
+}
+
+
+int main(int argc, const char* argv[])
+{
+    if (argc == 1) {
+        runArg("-h");
+    }
+    else {
+        for (int i = 1; i < argc; ++i) {
+            std::string argument(argv[i]);
+            if (runArg(argument)) break;
+        }
+    }
+    return 1;
 }
