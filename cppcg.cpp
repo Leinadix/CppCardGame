@@ -24,7 +24,7 @@
 #define Card_PlusTwo 11
 #define Card_Skip 12
 #define Card_PlusFour 13
-#define Card_Uno 14
+#define Card_ColorChange 14
 #define Color_Yellow 0
 #define Color_Blue 1
 #define Color_Green 2
@@ -69,7 +69,7 @@ Card TopOfDeck(Deck& deck) {
 Deck InitDeck() {
     Deck deck;
     deck.cards_left = 0;
-    for (int t = 0; t <= Card_Uno; t++) {
+    for (int t = 0; t <= Card_ColorChange; t++) {
         for (int i = 0; i < 4; i++) {
             Card c = { t, i };
             deck.cards.push_front(c);
@@ -129,8 +129,8 @@ std::string CardToText(Card card) {
     case Card_PlusFour:
         r.append("+4");
         break;
-    case Card_Uno:
-        r.append("Uno");
+    case Card_ColorChange:
+        r.append("ColorChange");
         break;
     case Card_Skip:
         r.append("Skip");
@@ -183,7 +183,7 @@ bool CardAllowed(Card c, Deck staple) {
     if (c.type == stackCard.type && stackCard.type < Card_PlusFour) {
         return true;
     }
-    if ((c.type == Card_Uno && stackCard.type != Card_Uno) || (c.type == Card_PlusFour && stackCard.type != Card_PlusFour)) {
+    if ((c.type == Card_ColorChange && stackCard.type != Card_ColorChange) || (c.type == Card_PlusFour && stackCard.type != Card_PlusFour)) {
         return true;
     }
     return false;
