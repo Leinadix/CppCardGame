@@ -1,6 +1,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include "cppcg.h"
 
 using boost::asio::ip::tcp;
 
@@ -46,9 +47,9 @@ private:
         std::size_t bytes_transferred) {
         if (!error) {
             std::cout << "Received: " << std::string(buffer_.data(), bytes_transferred) << std::endl;
-
+            const char* t = "lkjsdflkjsdflkjsdflkj";
             // Echo back the received data to the client
-            boost::asio::async_write(*socket, boost::asio::buffer(buffer_, bytes_transferred),
+            boost::asio::async_write(*socket, boost::asio::buffer(t, strlen(t)),
                 boost::bind(&Server::handleWrite, this, socket,
                     boost::asio::placeholders::error));
         }
@@ -76,7 +77,7 @@ private:
 int RunServer() {
     try {
         boost::asio::io_service io_service;
-        Server server(io_service, 12345);
+        Server server(io_service, 32441);
         io_service.run();
     }
     catch (std::exception& e) {
@@ -84,4 +85,36 @@ int RunServer() {
     }
 
     return 0;
+}
+
+void test() {
+    Deck deck = InitDeck();
+    Deck staple;
+
+    ShuffleDeck(deck);
+    ShuffleDeck(deck);
+
+    Hand BugFixer;
+    BugFixer.name = "Secret Service";
+    DrawCard(BugFixer, deck);
+    PutDownCard(BugFixer, staple, 0);
+
+    const int numPlayers = 4;
+    Hand* players = new Hand[numPlayers];
+    for (int i = 0; i < numPlayers; i++) {
+        players[i].name = "Player " + std::to_string(i);
+    }
+
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < numPlayers; j++) {
+            DrawCard(players[j], deck);
+        }
+    }
+
+    bool reverse = false;
+    int plusCards = 0;
+    int isOver = 0;
+    int i = 0;
+    while (RunTurn(i, numPlayers, players, deck, staple, plusCards, reverse) > 0) {
+    }
 }

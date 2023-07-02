@@ -8,45 +8,7 @@
 #include <string>
 #include "Server.h"
 #include "Client.h"
-
-#pragma region Card_Defines
-#define Card_0 0
-#define Card_1 1
-#define Card_2 2
-#define Card_3 3
-#define Card_4 4
-#define Card_5 5
-#define Card_6 6
-#define Card_7 7
-#define Card_8 8
-#define Card_9 9
-#define Card_Reverse 10
-#define Card_PlusTwo 11
-#define Card_Skip 12
-#define Card_PlusFour 13
-#define Card_ColorChange 14
-#define Color_Yellow 0
-#define Color_Blue 1
-#define Color_Green 2
-#define Color_Red 3
-#pragma endregion
-
-#pragma region Structs
-struct Card {
-    int type;
-    int color;
-};
-
-struct Deck {
-    std::deque<Card> cards;
-    int cards_left = 0;
-};
-
-struct Hand {
-    std::string name;
-    std::list<Card> cards;
-};
-#pragma endregion
+#include "cppcg.h"
 
 #pragma region DeckMethods
 void ShuffleDeck(Deck& deck) {
@@ -87,7 +49,6 @@ void StapleToDeck(Deck& deck, Deck& staple) {
         cpy.cards.push_back(TopOfDeck(staple));
     }
 }
-
 #pragma endregion
 
 #pragma region PrintMethods
@@ -167,7 +128,6 @@ void PrintStapleFull(Deck d) {
     }
     std::cout << "#-----------------#\n";
 }
-
 #pragma endregion
 
 #pragma region CardMethods
@@ -288,6 +248,35 @@ int CheckForWinners(Hand p) {
 }
 #pragma endregion
 
+int RunTurn(int& i, int numPlayers, Hand*& players, Deck& deck, Deck& staple, int& plusCards, bool& reverse) {
+    i %= numPlayers;
+    if (i < 0) {
+        i += numPlayers;
+    }
+    PlayTurn(players[i], deck, staple, plusCards);
+    if (staple.cards.begin()->type == Card_Reverse) {
+        reverse = !reverse;
+    }
+    else if (staple.cards.front().type == Card_Skip) {
+        i += reverse ? -1 : 1;
+    }
+    else if (staple.cards.front().type == Card_PlusTwo) {
+        plusCards += 2;
+    }
+    else if (staple.cards.front().type == Card_PlusFour) {
+        plusCards += 4;
+    }
+    int isOver = 0;
+    for (int j = 0; j < numPlayers; j++) {
+        Hand p = players[j];
+        isOver += CheckForWinners(p);
+        if (isOver > 0) std::cout << p.name << " won the game!";
+    }
+    if (isOver > 0) return -1;
+    i += reverse ? -1 : 1;
+    return 1;
+}
+
 void LocalGame() {
     Deck deck = InitDeck();
     Deck staple;
@@ -301,45 +290,22 @@ void LocalGame() {
     PutDownCard(BugFixer, staple, 0);
 
     const int numPlayers = 4;
-    Hand players[numPlayers];
+    Hand* players = new Hand[numPlayers];
     for (int i = 0; i < numPlayers; i++) {
         players[i].name = "Player " + std::to_string(i);
     }
 
     for (int i = 0; i < 6; i++) {
-        for (Hand& player : players)
-            DrawCard(player, deck);
+        for (int j = 0; j < numPlayers; j++) {
+            DrawCard(players[j], deck);
+        }
     }
 
     bool reverse = false;
     int plusCards = 0;
     int isOver = 0;
     int i = 0;
-    while (isOver == 0) {
-        i %= numPlayers;
-        if (i < 0) {
-            i += 4;
-        }
-        PlayTurn(players[i], deck, staple, plusCards);
-        if (staple.cards.begin()->type == Card_Reverse) {
-            std::cout << "REVERSE!!!!\n";
-            reverse = !reverse;
-        }
-        else if (staple.cards.front().type == Card_Skip) {
-            i += reverse ? -1 : 1;
-        }
-        else if (staple.cards.front().type == Card_PlusTwo) {
-            plusCards += 2;
-        }
-        else if (staple.cards.front().type == Card_PlusFour) {
-            plusCards += 4;
-        }
-        for (Hand p : players) {
-            isOver += CheckForWinners(p);
-            if (isOver > 0) std::cout << p.name << " won the game!";
-        }
-        if (isOver > 0) break;
-        i += reverse ? -1 : 1;
+    while (RunTurn(i, numPlayers, players, deck, staple, plusCards, reverse) > 0) {
     }
 }
 
@@ -366,11 +332,10 @@ bool runArg(std::string arg) {
     return false;
 }
 
-
 int main(int argc, const char* argv[])
 {
     if (argc == 1) {
-        runArg("-h");
+        runArg("-s");
     }
     else {
         for (int i = 1; i < argc; ++i) {
